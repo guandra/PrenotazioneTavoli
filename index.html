@@ -9,45 +9,50 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body data-page="public">
   <div class="page-shell">
-    <header class="hero">
-      <div class="hero-copy">
-        <p class="eyebrow">Sagra • prenotazioni online</p>
-        <h1>Organizza i tavoli, raccogli le prenotazioni e gestisci tutto dal browser.</h1>
+    <header class="topbar">
+      <a class="brand" href="index.html">Prenotazioni Sagra</a>
+      <form id="publicAdminLoginForm" class="topbar-login">
+        <input id="publicAdminUsername" type="text" placeholder="Admin" autocomplete="username" required>
+        <input id="publicAdminPassword" type="password" placeholder="Password" autocomplete="current-password" required>
+        <button type="submit" class="secondary-button">Login admin</button>
+      </form>
+    </header>
+
+    <section class="cover">
+      <div class="cover-copy">
+        <p class="eyebrow">Sagra • prenotazioni tavoli</p>
+        <h1>Prenota il tuo posto e conserva il codice per ingresso e modifiche.</h1>
         <p class="hero-text">
-          Sito statico pronto per GitHub Pages: chi prenota sceglie data, ora e numero posti,
-          mentre l'amministratore imposta eventi, capienza e tavoli componibili.
+          Scegli una data disponibile, seleziona l'orario, indica i posti richiesti e completa la prenotazione
+          lasciando nome e numero di telefono.
         </p>
         <div class="hero-badges">
-          <span>Statico</span>
-          <span>GitHub Pages</span>
-          <span>Salvataggio locale</span>
+          <span>Date selezionabili</span>
+          <span>Codice prenotazione</span>
+          <span>Modifica o cancellazione autonoma</span>
         </div>
       </div>
-      <aside class="hero-panel">
-        <h2>Come funziona</h2>
-        <ul>
-          <li>1. L'admin crea gli eventi e definisce orari e capienza.</li>
-          <li>2. L'utente prenota indicando nome e numero di posti.</li>
-          <li>3. Il sistema genera un codice per modificare o cancellare.</li>
-        </ul>
+      <aside class="cover-panel">
+        <p class="section-kicker">Eventi disponibili</p>
+        <div id="eventShowcase" class="showcase-list"></div>
       </aside>
-    </header>
+    </section>
 
     <main class="layout">
       <section class="card">
         <div class="section-heading">
           <div>
             <p class="section-kicker">Prenotazione</p>
-            <h2>Prenota un tavolo</h2>
+            <h2>Compila la richiesta</h2>
           </div>
           <div id="bookingAvailability" class="status-pill neutral">Seleziona una data disponibile</div>
         </div>
 
         <form id="bookingForm" class="form-grid">
           <label>
-            Data evento
+            Evento
             <select id="bookingEvent" required></select>
           </label>
           <label>
@@ -59,20 +64,25 @@
             <input id="bookingSeats" type="number" min="1" step="1" required>
           </label>
           <label>
-            Nome prenotazione
+            Nome e cognome
             <input id="bookingName" type="text" maxlength="80" placeholder="Es. Mario Rossi" required>
+          </label>
+          <label class="wide">
+            Numero di telefono
+            <input id="bookingPhone" type="tel" maxlength="30" placeholder="Es. 3331234567" required>
           </label>
           <button type="submit" class="primary-button">Conferma prenotazione</button>
         </form>
 
         <div id="bookingSummary" class="info-panel"></div>
+        <div id="bookingConfirmation" class="confirmation-panel hidden"></div>
       </section>
 
       <section class="card">
         <div class="section-heading">
           <div>
-            <p class="section-kicker">Gestione ospiti</p>
-            <h2>Modifica o cancella con il codice</h2>
+            <p class="section-kicker">Gestisci prenotazione</p>
+            <h2>Modifica o cancella con il tuo codice</h2>
           </div>
         </div>
 
@@ -85,24 +95,28 @@
         </form>
 
         <div id="lookupResult" class="info-panel empty">
-          Inserisci il codice ricevuto per aggiornare o annullare una prenotazione.
+          Solo chi conosce il codice può recuperare, modificare o cancellare la prenotazione.
         </div>
 
         <form id="editReservationForm" class="form-grid hidden">
           <input id="editReservationId" type="hidden">
           <label>
-            Nome
+            Nome e cognome
             <input id="editName" type="text" maxlength="80" required>
           </label>
           <label>
-            Data evento
+            Numero di telefono
+            <input id="editPhone" type="tel" maxlength="30" required>
+          </label>
+          <label>
+            Evento
             <select id="editEvent" required></select>
           </label>
           <label>
             Orario
             <select id="editTime" required></select>
           </label>
-          <label>
+          <label class="wide">
             Numero posti
             <input id="editSeats" type="number" min="1" step="1" required>
           </label>
@@ -111,90 +125,6 @@
             <button id="cancelReservationButton" type="button" class="danger-button">Cancella prenotazione</button>
           </div>
         </form>
-      </section>
-
-      <section class="card admin-card">
-        <div class="section-heading">
-          <div>
-            <p class="section-kicker">Amministrazione</p>
-            <h2>Gestisci eventi e disponibilità</h2>
-          </div>
-          <div id="adminSessionBadge" class="status-pill neutral">Non autenticato</div>
-        </div>
-
-        <div id="adminLoginPanel">
-          <p class="info-text">
-            Accesso demo attuale: <strong>user:</strong> admin <strong>psw:</strong> admin
-          </p>
-          <form id="adminLoginForm" class="lookup-row">
-            <label>
-              Username
-              <input id="adminUsername" type="text" autocomplete="username" required>
-            </label>
-            <label>
-              Password
-              <input id="adminPassword" type="password" autocomplete="current-password" required>
-            </label>
-            <button type="submit" class="secondary-button">Accedi</button>
-          </form>
-        </div>
-
-        <div id="adminPanel" class="hidden">
-          <div class="toolbar">
-            <p class="info-text">Gli eventi e le prenotazioni sono salvati nel browser corrente.</p>
-            <button id="adminLogoutButton" type="button" class="ghost-button">Esci</button>
-          </div>
-
-          <form id="eventForm" class="form-grid admin-form">
-            <input id="eventId" type="hidden">
-            <label>
-              Nome evento
-              <input id="eventName" type="text" maxlength="80" placeholder="Es. Sagra del Tortello" required>
-            </label>
-            <label>
-              Data
-              <input id="eventDate" type="date" required>
-            </label>
-            <label class="wide">
-              Orari disponibili
-              <input id="eventTimes" type="text" placeholder="18:30, 20:00, 21:30" required>
-            </label>
-            <label>
-              Modalità disponibilità
-              <select id="capacityMode" required>
-                <option value="manual">Posti totali</option>
-                <option value="tables">Tavoli componibili</option>
-              </select>
-            </label>
-            <label id="manualCapacityField">
-              Posti disponibili
-              <input id="manualCapacity" type="number" min="1" step="1">
-            </label>
-            <label id="tableSeatsField" class="hidden">
-              Posti tavolo base
-              <input id="tableSeats" type="number" min="2" step="1" value="4">
-            </label>
-            <label id="tableCountField" class="hidden">
-              Numero tavoli disponibili
-              <input id="tableCount" type="number" min="1" step="1" value="10">
-            </label>
-            <div class="action-row">
-              <button type="submit" class="primary-button">Salva evento</button>
-              <button id="resetEventFormButton" type="button" class="ghost-button">Nuovo evento</button>
-            </div>
-          </form>
-
-          <div class="admin-columns">
-            <div>
-              <h3>Eventi configurati</h3>
-              <div id="eventList" class="stack-list"></div>
-            </div>
-            <div>
-              <h3>Prenotazioni registrate</h3>
-              <div id="reservationList" class="stack-list"></div>
-            </div>
-          </div>
-        </div>
       </section>
     </main>
   </div>

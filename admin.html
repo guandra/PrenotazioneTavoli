@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin • Prenotazioni Sagra</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="admin">
+  <div class="page-shell">
+    <header class="topbar">
+      <a class="brand" href="index.html">Prenotazioni Sagra</a>
+      <div class="topbar-actions">
+        <span id="adminSessionBadge" class="status-pill neutral">Non autenticato</span>
+        <a class="ghost-link" href="index.html">Torna al sito</a>
+      </div>
+    </header>
+
+    <section class="admin-hero">
+      <div>
+        <p class="eyebrow">Area riservata</p>
+        <h1>Gestione eventi e lista prenotazioni.</h1>
+        <p class="hero-text">
+          Solo l'amministratore vede l'elenco completo delle prenotazioni. Da qui puoi creare date,
+          impostare capienza o tavoli componibili e monitorare i partecipanti.
+        </p>
+      </div>
+    </section>
+
+    <main class="layout">
+      <section id="adminLoginPanel" class="card login-card">
+        <p class="section-kicker">Accesso amministratore</p>
+        <h2>Login admin</h2>
+        <p class="info-text">Credenziali demo attuali: <strong>admin</strong> / <strong>admin</strong></p>
+        <form id="adminLoginForm" class="form-grid compact-grid">
+          <label>
+            Username
+            <input id="adminUsername" type="text" autocomplete="username" required>
+          </label>
+          <label>
+            Password
+            <input id="adminPassword" type="password" autocomplete="current-password" required>
+          </label>
+          <button type="submit" class="primary-button">Accedi</button>
+        </form>
+      </section>
+
+      <section id="adminPanel" class="hidden">
+        <div class="admin-split">
+          <section class="card">
+            <div class="section-heading">
+              <div>
+                <p class="section-kicker">Eventi</p>
+                <h2>Crea o modifica un evento</h2>
+              </div>
+              <button id="adminLogoutButton" type="button" class="ghost-button">Esci</button>
+            </div>
+
+            <form id="eventForm" class="form-grid admin-form">
+              <input id="eventId" type="hidden">
+              <label>
+                Nome evento
+                <input id="eventName" type="text" maxlength="80" placeholder="Es. Sagra del Tortello" required>
+              </label>
+              <label>
+                Data
+                <input id="eventDate" type="date" required>
+              </label>
+              <label class="wide">
+                Orari disponibili
+                <input id="eventTimes" type="text" placeholder="18:30, 20:00, 21:30" required>
+              </label>
+              <label>
+                Modalità disponibilità
+                <select id="capacityMode" required>
+                  <option value="manual">Posti totali</option>
+                  <option value="tables">Tavoli componibili</option>
+                </select>
+              </label>
+              <label id="manualCapacityField">
+                Posti disponibili
+                <input id="manualCapacity" type="number" min="1" step="1">
+              </label>
+              <label id="tableSeatsField" class="hidden">
+                Posti tavolo base
+                <input id="tableSeats" type="number" min="2" step="1" value="4">
+              </label>
+              <label id="tableCountField" class="hidden">
+                Numero tavoli disponibili
+                <input id="tableCount" type="number" min="1" step="1" value="10">
+              </label>
+              <div class="action-row">
+                <button type="submit" class="primary-button">Salva evento</button>
+                <button id="resetEventFormButton" type="button" class="ghost-button">Nuovo evento</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="card">
+            <p class="section-kicker">Calendario eventi</p>
+            <h2>Eventi configurati</h2>
+            <div id="eventList" class="stack-list"></div>
+          </section>
+        </div>
+
+        <section class="card">
+          <p class="section-kicker">Prenotazioni</p>
+          <h2>Elenco completo prenotazioni</h2>
+          <div id="reservationList" class="stack-list"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast hidden" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
