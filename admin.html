@@ -109,7 +109,44 @@
         <section class="card">
           <p class="section-kicker">Prenotazioni</p>
           <h2>Elenco completo prenotazioni</h2>
+          <div class="form-grid compact-grid admin-filter-grid">
+            <label>
+              Filtra per evento
+              <select id="adminReservationEventFilter"></select>
+            </label>
+            <label class="wide">
+              Cerca per nome o telefono
+              <input id="adminReservationSearch" type="text" placeholder="Es. Mario Rossi o 3331234567">
+            </label>
+          </div>
           <div id="reservationList" class="stack-list"></div>
+          <form id="adminReservationForm" class="form-grid hidden">
+            <input id="adminReservationId" type="hidden">
+            <label>
+              Nome e cognome
+              <input id="adminReservationName" type="text" maxlength="80" required>
+            </label>
+            <label>
+              Numero di telefono
+              <input id="adminReservationPhone" type="tel" maxlength="30" required>
+            </label>
+            <label>
+              Evento
+              <select id="adminReservationEvent" required></select>
+            </label>
+            <label>
+              Orario
+              <select id="adminReservationTime" required></select>
+            </label>
+            <label class="wide">
+              Numero posti
+              <input id="adminReservationSeats" type="number" min="1" step="1" required>
+            </label>
+            <div class="action-row">
+              <button type="submit" class="primary-button">Salva prenotazione</button>
+              <button id="adminReservationDeleteButton" type="button" class="danger-button">Cancella prenotazione</button>
+            </div>
+          </form>
         </section>
       </section>
     </main>

@@ -64,7 +64,17 @@ function mapElements() {
     tableCount: byId("tableCount"),
     resetEventFormButton: byId("resetEventFormButton"),
     eventList: byId("eventList"),
-    reservationList: byId("reservationList")
+    reservationList: byId("reservationList"),
+    adminReservationEventFilter: byId("adminReservationEventFilter"),
+    adminReservationSearch: byId("adminReservationSearch"),
+    adminReservationForm: byId("adminReservationForm"),
+    adminReservationId: byId("adminReservationId"),
+    adminReservationName: byId("adminReservationName"),
+    adminReservationPhone: byId("adminReservationPhone"),
+    adminReservationEvent: byId("adminReservationEvent"),
+    adminReservationTime: byId("adminReservationTime"),
+    adminReservationSeats: byId("adminReservationSeats"),
+    adminReservationDeleteButton: byId("adminReservationDeleteButton")
   };
 }
 
@@ -111,6 +121,11 @@ function bindAdminPage() {
   els.capacityMode?.addEventListener("change", syncCapacityModeFields);
   els.eventForm?.addEventListener("submit", handleEventSubmit);
   els.resetEventFormButton?.addEventListener("click", resetEventForm);
+  els.adminReservationEventFilter?.addEventListener("change", renderReservationList);
+  els.adminReservationSearch?.addEventListener("input", renderReservationList);
+  els.adminReservationEvent?.addEventListener("change", () => populateTimes("adminReservation"));
+  els.adminReservationForm?.addEventListener("submit", handleAdminReservationSubmit);
+  els.adminReservationDeleteButton?.addEventListener("click", handleAdminReservationDelete);
 }
 
 function loadState() {
@@ -212,6 +227,16 @@ function populateEventSelects() {
   if (els.editEvent) {
     setSelectOptions(els.editEvent, options, "Nessun evento");
   }
+  if (els.adminReservationEvent) {
+    setSelectOptions(els.adminReservationEvent, options, "Nessun evento");
+  }
+  if (els.adminReservationEventFilter) {
+    setSelectOptions(
+      els.adminReservationEventFilter,
+      [`<option value="">Tutti gli eventi</option>`, ...options],
+      "Tutti gli eventi"
+    );
+  }
 }
 
 function setSelectOptions(select, options, emptyLabel) {
@@ -235,8 +260,16 @@ function optionMarkup(value, label) {
 }
 
 function populateTimes(target) {
-  const eventSelect = target === "booking" ? els.bookingEvent : els.editEvent;
-  const timeSelect = target === "booking" ? els.bookingTime : els.editTime;
+  const eventSelect = target === "booking"
+    ? els.bookingEvent
+    : target === "adminReservation"
+      ? els.adminReservationEvent
+      : els.editEvent;
+  const timeSelect = target === "booking"
+    ? els.bookingTime
+    : target === "adminReservation"
+      ? els.adminReservationTime
+      : els.editTime;
   if (!eventSelect || !timeSelect) return;
 
   const event = getEventById(eventSelect.value);
@@ -407,7 +440,25 @@ function renderReservationList() {
     return;
   }
 
-  const sortedReservations = [...state.reservations].sort((a, b) => {
+  const filterEventId = els.adminReservationEventFilter?.value || "";
+  const searchTerm = (els.adminReservationSearch?.value || "").trim().toLowerCase();
+
+  const filteredReservations = state.reservations.filter((reservation) => {
+    if (filterEventId && reservation.eventId !== filterEventId) {
+      return false;
+    }
+    if (!searchTerm) {
+      return true;
+    }
+    return reservation.name.toLowerCase().includes(searchTerm) || (reservation.phone || "").toLowerCase().includes(searchTerm);
+  });
+
+  if (!filteredReservations.length) {
+    els.reservationList.innerHTML = `<div class="stack-card">Nessuna prenotazione trovata con i filtri attuali.</div>`;
+    return;
+  }
+
+  const sortedReservations = [...filteredReservations].sort((a, b) => {
     const eventA = getEventById(a.eventId);
     const eventB = getEventById(b.eventId);
     const dateA = eventA?.date || "9999-12-31";
@@ -417,25 +468,45 @@ function renderReservationList() {
     return a.time.localeCompare(b.time);
   });
 
-  els.reservationList.innerHTML = sortedReservations.map((reservation) => {
-    const event = getEventById(reservation.eventId);
-    const tableInfo = reservation.tablesUsed ? ` • tavoli usati: ${reservation.tablesUsed}` : "";
+  const grouped = groupReservationsByEvent(sortedReservations);
+  els.reservationList.innerHTML = grouped.map(({ event, reservations }) => {
+    const title = event ? formatEventLabel(event) : "Evento rimosso";
     return `
-      <article class="stack-card">
-        <div class="stack-card-header">
+      <section class="group-card">
+        <div class="group-header">
           <div>
-            <h4>${escapeHtml(reservation.name)}</h4>
-            <p>${escapeHtml(event ? formatEventLabel(event) : "Evento rimosso")} • ${escapeHtml(reservation.time)}</p>
-          </div>
-          <div class="meta-row">
-            <span class="meta-chip">${reservation.seats} posti${tableInfo}</span>
-            <span class="meta-chip">${escapeHtml(reservation.code)}</span>
+            <h3>${escapeHtml(title)}</h3>
+            <p>${reservations.length} prenotazioni</p>
           </div>
         </div>
-        <p>Telefono: ${escapeHtml(reservation.phone || "-")}</p>
-      </article>
+        <div class="stack-list">
+          ${reservations.map((reservation) => {
+            const tableInfo = reservation.tablesUsed ? ` • tavoli usati: ${reservation.tablesUsed}` : "";
+            return `
+              <article class="stack-card">
+                <div class="stack-card-header">
+                  <div>
+                    <h4>${escapeHtml(reservation.name)}</h4>
+                    <p>${escapeHtml(reservation.time)} • telefono ${escapeHtml(reservation.phone || "-")}</p>
+                  </div>
+                  <div class="meta-row">
+                    <span class="meta-chip">${reservation.seats} posti${tableInfo}</span>
+                    <span class="meta-chip">${escapeHtml(reservation.code)}</span>
+                  </div>
+                </div>
+                <div class="inline-buttons">
+                  <button type="button" class="secondary-button" data-action="edit-reservation-admin" data-id="${escapeHtml(reservation.id)}">Modifica</button>
+                  <button type="button" class="danger-button" data-action="delete-reservation-admin" data-id="${escapeHtml(reservation.id)}">Cancella</button>
+                </div>
+              </article>
+            `;
+          }).join("")}
+        </div>
+      </section>
     `;
   }).join("");
+
+  bindAdminReservationActions();
 }
 
 function bindAdminListActions() {
@@ -444,6 +515,15 @@ function bindAdminListActions() {
   });
   document.querySelectorAll("[data-action='delete-event']").forEach((button) => {
     button.addEventListener("click", () => deleteEvent(button.dataset.id));
+  });
+}
+
+function bindAdminReservationActions() {
+  document.querySelectorAll("[data-action='edit-reservation-admin']").forEach((button) => {
+    button.addEventListener("click", () => fillAdminReservationForm(button.dataset.id));
+  });
+  document.querySelectorAll("[data-action='delete-reservation-admin']").forEach((button) => {
+    button.addEventListener("click", () => deleteReservationById(button.dataset.id, true));
   });
 }
 
@@ -558,18 +638,7 @@ function handleEditSubmit(event) {
 
 function handleDeleteReservation() {
   const reservationId = els.editReservationId.value;
-  const existing = getReservationById(reservationId);
-  if (!existing) return showToast("Prenotazione non trovata.");
-
-  if (!window.confirm(`Vuoi cancellare la prenotazione ${existing.code}?`)) return;
-
-  state.reservations = state.reservations.filter((item) => item.id !== reservationId);
-  currentLookupReservationId = null;
-  saveState();
-  renderAll();
-  els.lookupResult.classList.add("empty");
-  els.lookupResult.textContent = "Prenotazione cancellata.";
-  showToast("Prenotazione cancellata.");
+  deleteReservationById(reservationId, false);
 }
 
 function handlePublicAdminLogin(event) {
@@ -601,6 +670,7 @@ function handleAdminLogin(event) {
 function handleAdminLogout() {
   localStorage.removeItem(ADMIN_SESSION_KEY);
   syncAdminPanel();
+  resetAdminReservationForm();
   renderAll();
   showToast("Sessione amministratore chiusa.");
 }
@@ -693,6 +763,104 @@ function deleteEvent(eventId) {
   saveState();
   renderAll();
   showToast("Evento eliminato.");
+}
+
+function fillAdminReservationForm(reservationId) {
+  const reservation = getReservationById(reservationId);
+  if (!reservation || !els.adminReservationForm) return;
+
+  els.adminReservationId.value = reservation.id;
+  els.adminReservationName.value = reservation.name;
+  els.adminReservationPhone.value = reservation.phone || "";
+  els.adminReservationEvent.value = reservation.eventId;
+  populateTimes("adminReservation");
+  els.adminReservationTime.value = reservation.time;
+  els.adminReservationSeats.value = reservation.seats;
+  els.adminReservationForm.classList.remove("hidden");
+  window.scrollTo({ top: els.adminReservationForm.offsetTop - 24, behavior: "smooth" });
+}
+
+function resetAdminReservationForm() {
+  if (!els.adminReservationForm) return;
+  els.adminReservationForm.reset();
+  els.adminReservationId.value = "";
+  els.adminReservationForm.classList.add("hidden");
+}
+
+function handleAdminReservationSubmit(event) {
+  event.preventDefault();
+  const reservationId = els.adminReservationId.value;
+  const existing = getReservationById(reservationId);
+  if (!existing) return showToast("Prenotazione non trovata.");
+
+  const name = els.adminReservationName.value.trim();
+  const phone = normalizePhone(els.adminReservationPhone.value);
+  const eventId = els.adminReservationEvent.value;
+  const time = els.adminReservationTime.value;
+  const seats = Number(els.adminReservationSeats.value);
+
+  if (!name) return showToast("Inserisci il nome della prenotazione.");
+  if (!phone) return showToast("Inserisci il numero di telefono.");
+
+  const validation = canReserve(eventId, time, seats, reservationId);
+  if (!validation.ok) return showToast(validation.reason);
+
+  Object.assign(existing, buildReservation({
+    id: existing.id,
+    code: existing.code,
+    createdAt: existing.createdAt,
+    eventId,
+    time,
+    seats,
+    name,
+    phone
+  }));
+
+  saveState();
+  renderAll();
+  showToast("Prenotazione aggiornata dall'admin.");
+}
+
+function handleAdminReservationDelete() {
+  const reservationId = els.adminReservationId.value;
+  deleteReservationById(reservationId, true);
+}
+
+function deleteReservationById(reservationId, fromAdmin) {
+  const existing = getReservationById(reservationId);
+  if (!existing) return showToast("Prenotazione non trovata.");
+
+  if (!window.confirm(`Vuoi cancellare la prenotazione ${existing.code}?`)) return;
+
+  state.reservations = state.reservations.filter((item) => item.id !== reservationId);
+  if (currentLookupReservationId === reservationId) {
+    currentLookupReservationId = null;
+  }
+  saveState();
+  renderAll();
+
+  if (fromAdmin) {
+    resetAdminReservationForm();
+  } else if (els.lookupResult) {
+    els.lookupResult.classList.add("empty");
+    els.lookupResult.textContent = "Prenotazione cancellata.";
+  }
+  showToast("Prenotazione cancellata.");
+}
+
+function groupReservationsByEvent(reservations) {
+  const groups = new Map();
+  for (const reservation of reservations) {
+    const key = reservation.eventId || "missing";
+    if (!groups.has(key)) {
+      groups.set(key, {
+        event: getEventById(reservation.eventId),
+        reservations: []
+      });
+    }
+    groups.get(key).reservations.push(reservation);
+  }
+  return [...groups.values()];
 }
 
 function validateEventPayload(payload) {

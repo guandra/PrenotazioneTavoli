@@ -183,7 +183,8 @@ label,
 .showcase-card,
 .info-panel,
 .stack-card,
-.confirmation-panel {
+.confirmation-panel,
+.group-card {
   border-radius: 18px;
   border: 1px solid var(--line);
   background: rgba(255, 250, 243, 0.86);
@@ -203,6 +204,11 @@ label,
 .stack-list {
   display: grid;
   gap: 24px;
+}
+
+.admin-filter-grid {
+  margin-top: 18px;
+  margin-bottom: 18px;
 }
 
 .section-heading,
@@ -352,6 +358,18 @@ button {
 .stack-card {
   display: grid;
   gap: 12px;
+}
+
+.group-card {
+  display: grid;
+  gap: 16px;
+}
+
+.group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 16px;
 }
 
 .stack-card-header {
